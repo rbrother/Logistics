@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Diagnostics;
-using System.Numerics;
 
 abstract public class PlotWindow : Window {
     Image image;
@@ -22,25 +18,28 @@ abstract public class PlotWindow : Window {
         this.WindowStyle = System.Windows.WindowStyle.None;
         image = new Image( );
         this.Content = image;
-        image.MouseLeftButtonUp += image_MouseUp;
         Bmp = new WriteableBitmap( PixelWidth, PixelHeight, 96, 96, PixelFormats.Bgra32, null );
         image.Source = Bmp;
         DoPlot();
     }
 
-    void image_MouseUp( object sender, System.Windows.Input.MouseButtonEventArgs e ) {
-        var pos = e.MouseDevice.GetPosition( image );
-        // Center = Origin + new Complex( pos.X, pos.Y ) * PixelStep;
-    }
-
-    protected void DrawPixel( int x, int y, Color color ) {
-        byte[] buffer = new byte[4];
-        buffer[0] = color.B;
-        buffer[1] = color.G;
-        buffer[2] = color.R;
-        buffer[3] = color.A;
-        Bmp.WritePixels(new Int32Rect(0, 0, 1, 1), buffer, 4, 
-            Math.Min( x, PixelWidth-1), Math.Min(y, PixelHeight-1));
+    protected void DrawPixels(double[,] plotLevel)
+    {
+        var buffer = new byte[PixelWidth * PixelHeight * 4];
+        for (int y = 0; y < PixelHeight; ++y)
+        {
+            for (int x = 0; x < PixelWidth; ++x)
+            {
+                var level = Convert.ToByte((1.0 - plotLevel[x, y]) * 255.0);
+                var color = Color.FromRgb(level, level, level);
+                var bufferOffset = (y * PixelWidth + x) * 4;
+                buffer[bufferOffset] = color.B;
+                buffer[bufferOffset + 1] = color.G;
+                buffer[bufferOffset + 2] = color.R;
+                buffer[bufferOffset + 3] = color.A;
+            }
+        }
+        Bmp.WritePixels(new Int32Rect(0, 0, PixelWidth, PixelHeight), buffer, 4 * PixelWidth, 0, 0);
     }
 
 }

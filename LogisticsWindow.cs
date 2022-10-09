@@ -4,27 +4,30 @@ using System.Numerics;
 using System.Timers;
 using System.Diagnostics;
 
-public class LogisticsWindow : PlotWindow {
+public class LogisticsWindow : PlotWindow
+{
+    readonly double r_min = 3.5, r_max = 4.0;
+    readonly double x_min = 0.0, x_max = 1.0;
+    readonly double step = 0.00000003;
 
-    double r_min = 3.5;
-    double r_max = 4.0;
-    double step = 0.0000001;
+    double Intensify(double level) => level + (1.0 - level) * 0.2;
 
-    protected override void DoPlot( ) {
-        var start = DateTime.Now;
+    protected override void DoPlot()
+    {
         double x = 0.1;
-        double[,] plotLevel = new double[PixelWidth,PixelHeight];
+        double[,] plotLevel = new double[PixelWidth+1, PixelHeight+1];
         for (double r = r_min; r < r_max; r += step)
         {
             x = x * r * (1 - x);
-            double relativeScreenX = (r - r_min) / (r_max - r_min);
-            int screenX = Math.Min( Convert.ToInt32(relativeScreenX * PixelWidth), PixelWidth-1);
-            int screenY = Math.Min( Convert.ToInt32( PixelHeight * (1-x)), PixelHeight-1);
-            plotLevel[screenX, screenY] = Math.Min(plotLevel[screenX, screenY] + 0.1, 1.0);
-            var level = Convert.ToByte((1.0-plotLevel[screenX, screenY]) * 255.0);
-            DrawPixel(screenX, screenY, Color.FromRgb(level, level, level));
+            var relativeScreenX = (r - r_min) / (r_max - r_min);
+            var relativeScreenY = (x - x_min) / (x_max - x_min);
+            var screenX = Convert.ToInt32(relativeScreenX * PixelWidth);
+            var screenY = Convert.ToInt32(PixelHeight * (1 - relativeScreenY));
+            if (screenX >= 0 && screenY >= 0 && screenX < PixelWidth && screenY < PixelHeight) { 
+                plotLevel[screenX, screenY] = Intensify(plotLevel[screenX, screenY]);
+            }
         }
-        Debug.WriteLine($"Duration: {DateTime.Now - start}");
+        DrawPixels(plotLevel);
     }
 
 } // class
