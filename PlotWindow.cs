@@ -30,7 +30,7 @@ abstract public class PlotWindow : Window {
         {
             for (int x = 0; x < PixelWidth; ++x)
             {
-                var level = Convert.ToByte((1.0 - plotLevel[x, y]) * 255.0);
+                var level = Convert.ToByte(plotLevel[x, y] * 255.0);
                 var color = Color.FromRgb(level, level, level);
                 var bufferOffset = (y * PixelWidth + x) * 4;
                 buffer[bufferOffset] = color.B;
